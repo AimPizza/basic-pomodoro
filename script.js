@@ -1,7 +1,7 @@
-//const STUDY_DURATION = 25 * 60; // time in seconds
-//const BREAK_DURATION = 5 * 60; // time in seconds
-const STUDY_DURATION = 5; // time in seconds
-const BREAK_DURATION = 3; // time in seconds
+const STUDY_DURATION = 25 * 60; // time in seconds
+const BREAK_DURATION = 5 * 60; // time in seconds
+//const STUDY_DURATION = 5; // time in seconds
+//const BREAK_DURATION = 3; // time in seconds
 
 const pomodoroStatus = {
   STUDYING: 'studying',
