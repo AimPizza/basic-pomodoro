@@ -1,7 +1,8 @@
 const STUDY_DURATION = 25 * 60; // time in seconds
 const BREAK_DURATION = 5 * 60; // time in seconds
-//const STUDY_DURATION = 5; // time in seconds
-//const BREAK_DURATION = 3; // time in seconds
+// const STUDY_DURATION = 5; // time in seconds
+// const BREAK_DURATION = 3; // time in seconds
+
 
 const pomodoroStatus = {
   STUDYING: 'studying',
@@ -75,7 +76,7 @@ class Timer {
 
 
     this.loadStateOrDefault();
-    window.addEventListener('beforeunload', () => {this.saveState();});
+    window.addEventListener('beforeunload', () => { this.saveState(); });
     console.log("constructed, waiting for input..");
   }
 
@@ -113,6 +114,7 @@ class Timer {
       this.timerState.timesOnBreak = 0;
       this.timerState.timesStudied = 0;
     }
+    this.swapAppearance(this.timerState.currentStatus);
     this.showStatus();
   }
 
@@ -139,6 +141,30 @@ class Timer {
   setTimeLeft(secondsLeft) {
     this.timeLeft = secondsLeft;
     this.showStatus();
+  }
+
+  /// accepts a pomodorostate and matches colors to give based on that
+  swapAppearance(pomoState) {
+    const styles = getComputedStyle(document.documentElement);
+    const studyColor = styles.getPropertyValue('--study-color').trim();
+    const breakColor = styles.getPropertyValue('--break-color').trim();
+
+    switch (pomoState) {
+      case pomodoroStatus.ON_BREAK:
+      case pomodoroStatus.BREAK_PAUSED:
+        document.documentElement.style.setProperty('--primary-color', breakColor);
+        document.documentElement.style.setProperty('--secondary-color', studyColor);
+        break;
+      case pomodoroStatus.STUDYING:
+      case pomodoroStatus.STUDY_PAUSED:
+        document.documentElement.style.setProperty('--primary-color', studyColor);
+        document.documentElement.style.setProperty('--secondary-color', breakColor);
+        break;
+      default:
+        console.error('attempted to swap appearance to unhandled state: ', pomoState);
+        break;
+    }
+
   }
 
   toggleState() {
@@ -171,7 +197,8 @@ class Timer {
       case pomodoroStatus.STUDYING:
         console.log('finished studying. now on break..');
         this.stopTimer();
-        this.setStatus(pomodoroStatus.ON_BREAK)
+        this.setStatus(pomodoroStatus.ON_BREAK);
+        this.swapAppearance(pomodoroStatus.ON_BREAK);
         this.setTimeLeft(BREAK_DURATION);
         this.runTimer();
         this.timerState.incrementTimesStudied();
@@ -179,7 +206,8 @@ class Timer {
       case pomodoroStatus.ON_BREAK:
         console.log('break finished. now studying..');
         this.stopTimer();
-        this.setStatus(pomodoroStatus.STUDYING)
+        this.setStatus(pomodoroStatus.STUDYING);
+        this.swapAppearance(pomodoroStatus.STUDYING);
         this.setTimeLeft(STUDY_DURATION);
         this.runTimer();
         this.timerState.incrementTimesOnBreak();
@@ -206,5 +234,54 @@ class Timer {
   }
 
 };
+
+
+class UiHandler {
+  constructor() {
+    this.handleClick = this.handleClick.bind(this);
+    this.selectElement(document.querySelector('[tab-button=timer]'));
+    document.querySelectorAll('button[tab-button]')
+      .forEach((btn) => {
+        btn.addEventListener('click', this.handleClick);
+
+      });
+  }
+
+  handleClick(e) {
+    e.preventDefault();
+
+
+    const buttonName = e.currentTarget.getAttribute('tab-button');
+    this.selectElement(e.currentTarget);
+    //this.hideAll();
+    //this.showElementById(buttonName); // show a window based on the corrosponding tab-button
+    console.log('Clicked: ', buttonName);
+  }
+
+  /// accepts a tab button
+  selectElement(anElement) {
+    this.hideAll();
+    this.setAriaToElement(anElement)
+    this.showElementById(anElement.getAttribute('tab-button')) // value of tab-button on the button is the id of the element that's to be enabled
+  }
+
+  setAriaToElement(anElement) {
+    document.querySelectorAll('button[tab-button]')
+      .forEach(btn => btn.setAttribute('aria-selected', 'false'));
+    anElement.setAttribute('aria-selected', 'true');
+  }
+
+  showElementById(elementId) {
+    console.log('the id: ' + elementId);
+
+    document.querySelector('#' + elementId).classList.remove('hidden');
+  }
+
+  hideAll() {
+    document.querySelectorAll('main div').forEach(pomoWindow => pomoWindow.classList.add('hidden'));
+  }
+}
+
+let ui = new UiHandler();
 
 let timer = new Timer();

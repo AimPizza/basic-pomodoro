@@ -1,5 +1,7 @@
 :root {
     /* color-theme: https://github.com/joshdick/onedark.vim */
+    --study-color: #E06C75;
+    --break-color: #98C379;
     --bg-color: #282C34;
     --fg-color: #ABB2BF;
     --primary-color: #E06C75;
@@ -20,25 +22,47 @@ body {
 }
 
 button {
-    background-color: var(--fg-color);
-    border: none;
-    color: var(--bg-color);
-    padding: 10px 15px;
-    border-radius: 4px;
     text-decoration: none;
+    color: var(--bg-color);
 }
 
-#navbar {
+button[tab-button] {
+    background-color: var(--bg-color);
+    color: var(--fg-color);
+    border: none;
+    font-size: 1em;
+    padding: 10px;
+    margin: 3px 7px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    /* shoutouts to w3schools */
+}
+
+button[tab-button][aria-selected=true] {
+    border-bottom: solid var(--primary-color);
+}
+
+nav {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+
+    opacity: 0;
+    transition: opacity .75s;
+}
+
+nav:hover {
+    opacity: 1;
+}
+
+main {
+    align-self: center;
 }
 
 #timer {
     align-self: center;
 }
 
-#timer > #timer-time {
-    color:var(--primary-color);
+#timer #timer-time {
+    color: var(--primary-color);
     font-size: 7rem;
     margin: 0;
 }
@@ -50,5 +74,13 @@ button {
 }
 
 #timer #timer-controls button {
-    margin: 5px 0 ;
+    margin: 5px 0;
+    background-color: var(--fg-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.hidden {
+    display: none;
 }

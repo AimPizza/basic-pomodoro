@@ -4,24 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>simple pomodoro</title>
+    <title>basic pomodoro</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
     <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
-    <nav id="navbar">  
-        <!-- spaceholder for future settings button and perhaps tabs to view stats -->
-    </nav>
-    <div id="timer">
-        <p id="timer-statustext"></p>
-        <p id="timer-time">00:00</p>
-        <div id="timer-controls">
-            <button type="button" id="button-toggle">toggle</button>
-            <button type="button" id="button-reset">reset</button>
+    <nav>
+        <div id="nav-left">
+            <button type="button" tab-button="timer">timer</button>
+            <button type="button" tab-button="stats">stats</button>
         </div>
-    </div>
+        <div id="nav-right">
+            <button type="button" id="button-preferences" tab-button="prefs">preferences</button>
+        </div>
+    </nav>
+    <main>
+        <div id="stats">
+            <p>Here are various statistics which are definitely not just placeholders.</p>
+        </div>
+        <div id="prefs">this is where settings should be</div>
+        <div id="timer">
+            <p id="timer-statustext"></p>
+            <p id="timer-time">00:00</p>
+            <div id="timer-controls">
+                <button type="button" id="button-toggle">toggle</button>
+                <button type="button" id="button-reset">reset</button>
+            </div>
+        </div>
+    </main>
     <footer></footer>
 </body>
 
