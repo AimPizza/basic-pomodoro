@@ -56,7 +56,7 @@ class Timer {
   seconds;
   minutes;
   timerState = new TimerState();
-  storageManger = new StorageManager('timerData');
+  timerStorageManager = new StorageManager('timerData');
 
   constructor(app) {
     this.app = app;
@@ -73,24 +73,23 @@ class Timer {
 
 
     this.loadStateOrDefault();
-    window.addEventListener('beforeunload', () => { this.saveState(); });
-    console.log("constructed, waiting for input..");
+    window.addEventListener('beforeunload', () => { this.saveTimerState(); });
   }
 
-  saveState() {
+  saveTimerState() {
     const data = {
       currentStatus: this.timerState.currentStatus,
       timeLeft: this.timeLeft,
       timesOnBreak: this.timerState.timesOnBreak,
       timesStudied: this.timerState.timesStudied
     };
-    this.storageManger.save(data);
+    this.timerStorageManager.save(data);
   }
 
   // load settings and state from localStorage (as of now)
   // if null -> set defaults
   loadStateOrDefault() {
-    const data = this.storageManger.load();
+    const data = this.timerStorageManager.load();
     if (data) {
       switch (data.currentStatus) {
         case pomodoroStatus.STUDYING:
@@ -107,7 +106,7 @@ class Timer {
       this.timerState.timesStudied = data.timesStudied;
     } else {
       this.setStatus(pomodoroStatus.STUDY_PAUSED);
-      this.setTimeLeft(this.app.STUDY_DURATION);
+      this.setTimeLeft(this.app.studyDuration);
       this.timerState.timesOnBreak = 0;
       this.timerState.timesStudied = 0;
     }
@@ -186,7 +185,7 @@ class Timer {
       default:
         break;
     }
-    this.saveState();
+    this.saveTimerState();
   }
 
   finishState() {
@@ -196,7 +195,7 @@ class Timer {
         this.stopTimer();
         this.setStatus(pomodoroStatus.ON_BREAK);
         this.swapAppearance(pomodoroStatus.ON_BREAK);
-        this.setTimeLeft(this.app.BREAK_DURATION);
+        this.setTimeLeft(this.app.breakDuration);
         this.runTimer();
         this.timerState.incrementTimesStudied();
         break;
@@ -205,7 +204,7 @@ class Timer {
         this.stopTimer();
         this.setStatus(pomodoroStatus.STUDYING);
         this.swapAppearance(pomodoroStatus.STUDYING);
-        this.setTimeLeft(this.app.STUDY_DURATION);
+        this.setTimeLeft(this.app.studyDuration);
         this.runTimer();
         this.timerState.incrementTimesOnBreak();
         break;
@@ -213,7 +212,7 @@ class Timer {
         console.error('Unhandled state was finished.');
         break;
     }
-    this.saveState();
+    this.saveTimerState();
   };
 
   runTimer() {
@@ -226,8 +225,9 @@ class Timer {
 
   resetTimer() {
     this.stopTimer();
-    this.setTimeLeft(this.app.STUDY_DURATION);
+    this.setTimeLeft(this.app.studyDuration);
     this.setStatus(pomodoroStatus.STUDY_PAUSED);
+    this.saveTimerState();
   }
 
 };
@@ -271,8 +271,6 @@ class UiHandler {
   }
 
   showElementById(elementId) {
-    console.log('the id: ' + elementId);
-
     document.querySelector('#' + elementId).classList.remove('hidden');
   }
 
@@ -285,23 +283,89 @@ class UiHandler {
 // testing study duration slider
 
 class App {
+  studyDuration;
+  breakDuration;
+  ui;
+  timer;
+  settingsStorageManager = new StorageManager('timerSettings');
+
+  settingsConfig = [
+    {
+      settingName: 'studyDuration',
+      inputSelector: '#study-duration-setting .pref-input',
+      labelSelector: '#study-duration-setting .pref-value',
+      onUpdate: (value) => this.setStudyDuration(value),
+    },
+    {
+      settingName: 'breakDuration',
+      inputSelector: '#break-duration-setting .pref-input',
+      labelSelector: '#break-duration-setting .pref-value',
+      onUpdate: (value) => this.setBreakDuration(value),
+    },
+  ];
+
   constructor() {
-    this.STUDY_DURATION = 25 * 60; // time in seconds
-    this.BREAK_DURATION = 5 * 60; // time in seconds
-    // this.STUDY_DURATION = 5; // time in seconds
-    // this.BREAK_DURATION = 3; // time in seconds
+    // defaults in case the localStorage is empty
+    this.studyDuration = 25 * 60; // time in seconds
+    this.breakDuration = 5 * 60; // time in seconds
+    // this.studyDuration = 5; // time in seconds
+    // this.breakDuration = 3; // time in seconds
 
     this.ui = new UiHandler();
     this.timer = new Timer(this);
 
+    this.loadTimerSettings();
+    this.registerInputs();
+  }
+
+  saveTimerSettings() {
+    const data = {};
+    this.settingsConfig.forEach(({ settingName }) => {
+      data[settingName] = this[settingName];
+    })
+    this.settingsStorageManager.save(data);
+  }
+
+  // in case nothing can be loaded, the values stay on default as set at the start of the constructor
+  loadTimerSettings() {
+    const data = this.settingsStorageManager.load();
+    if (data) {
+      this.settingsConfig.forEach(({ settingName, onUpdate }) => {
+        if (data[settingName] !== undefined) { onUpdate(data[settingName] / 60); }; // note the conversion from seconds to minutes
+      })
+    }
+  }
+
+  registerInputs() {
+    this.settingsConfig.forEach(({ settingName, inputSelector, labelSelector, onUpdate }) => {
+      const inputEl = document.querySelector(inputSelector);
+      const labelEl = document.querySelector(labelSelector);
+
+      // Initialize label
+      inputEl.value = this[settingName] / 60;
+      const initialValue = parseInt(inputEl.value, 10); // TODO: input validation
+      labelEl.textContent = initialValue;
+
+      // Listen for changes
+      inputEl.oninput = () => {
+        const newValue = parseInt(inputEl.value, 10); // TODO: input validation
+        labelEl.textContent = newValue;
+        onUpdate(newValue);
+        this.saveTimerSettings();
+      };
+    });
+  }
+
+  /// set study duration to a value in minutes
+  setStudyDuration(newDuration) {
+    console.assert(Number.isInteger(newDuration) && newDuration > 0, 'attempting to set studyDuration to invalid value');
+    this.studyDuration = newDuration * 60;
+  }
+  /// set break duration to a value in minutes
+  setBreakDuration(newDuration) {
+    console.assert(Number.isInteger(newDuration) && newDuration > 0, 'attempting to set breakDuration to invalid value');
+    this.breakDuration = newDuration * 60;
   }
 }
-
-let slider = document.querySelector('#study-duration-setting .pref-input');
-console.log('sliders value: ', slider.value)
-let sliderValueLabel = document.querySelector('#study-duration-setting .pref-value');
-sliderValueLabel.textContent = slider.value;
-slider.oninput = () => { sliderValueLabel.textContent = slider.value; }
-
 
 let app = new App();
