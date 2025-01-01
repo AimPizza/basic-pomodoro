@@ -57,6 +57,25 @@ main {
     align-self: center;
 }
 
+#prefs div {
+    /* width: 100vw; */
+    display: grid;
+    grid-template-columns: [description] 1fr [setting-panel] 2fr [current-value] 1fr;
+
+    & .pref-name {
+        grid-column: description;
+    }
+
+    & .pref-input {
+        grid-column: setting-panel;
+    }
+
+    & .pref-value {
+        grid-column: current-value;
+    }
+}
+
+
 #timer {
     align-self: center;
 }
@@ -82,5 +101,11 @@ main {
 }
 
 .hidden {
-    display: none;
+    /* display: none; does not work since styling pages as grid wouldn't work because it overrides display*/
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }

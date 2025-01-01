@@ -24,7 +24,20 @@
         <div id="stats">
             <p>Here are various statistics which are definitely not just placeholders.</p>
         </div>
-        <div id="prefs">this is where settings should be</div>
+        <div id="prefs">
+            <div id="study-duration-setting">
+                <p class="pref-name">study duration:</p>
+                <input class="pref-input" type="range" value="25" min="1" max="600" name="study-time"
+                    id="slider-study-time">
+                <p class="pref-value">000</p>
+            </div>
+            <div id="break-duration-setting">
+                <p class="pref-name">break duration:</p>
+                <input class="pref-input" type="range" value="5" min="1" max="600" name="break-time"
+                    id="slider-break-time">
+                <p class="pref-value">000</p>
+            </div>
+        </div>
         <div id="timer">
             <p id="timer-statustext"></p>
             <p id="timer-time">00:00</p>

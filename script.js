@@ -1,8 +1,3 @@
-const STUDY_DURATION = 25 * 60; // time in seconds
-const BREAK_DURATION = 5 * 60; // time in seconds
-// const STUDY_DURATION = 5; // time in seconds
-// const BREAK_DURATION = 3; // time in seconds
-
 
 const pomodoroStatus = {
   STUDYING: 'studying',
@@ -55,6 +50,7 @@ class Timer {
   tResetButton = document.querySelector('#button-reset');
   tToggleButton = document.querySelector('#button-toggle');
   tStatusText = document.querySelector('#timer-statustext');
+  app;
   timerId;
   timeLeft;
   seconds;
@@ -62,7 +58,8 @@ class Timer {
   timerState = new TimerState();
   storageManger = new StorageManager('timerData');
 
-  constructor() {
+  constructor(app) {
+    this.app = app;
     this.displayTime = this.showStatus.bind(this);
     this.setStatus = this.setStatus.bind(this);
     this.setTimeLeft = this.setTimeLeft.bind(this);
@@ -110,7 +107,7 @@ class Timer {
       this.timerState.timesStudied = data.timesStudied;
     } else {
       this.setStatus(pomodoroStatus.STUDY_PAUSED);
-      this.setTimeLeft(STUDY_DURATION);
+      this.setTimeLeft(this.app.STUDY_DURATION);
       this.timerState.timesOnBreak = 0;
       this.timerState.timesStudied = 0;
     }
@@ -199,7 +196,7 @@ class Timer {
         this.stopTimer();
         this.setStatus(pomodoroStatus.ON_BREAK);
         this.swapAppearance(pomodoroStatus.ON_BREAK);
-        this.setTimeLeft(BREAK_DURATION);
+        this.setTimeLeft(this.app.BREAK_DURATION);
         this.runTimer();
         this.timerState.incrementTimesStudied();
         break;
@@ -208,7 +205,7 @@ class Timer {
         this.stopTimer();
         this.setStatus(pomodoroStatus.STUDYING);
         this.swapAppearance(pomodoroStatus.STUDYING);
-        this.setTimeLeft(STUDY_DURATION);
+        this.setTimeLeft(this.app.STUDY_DURATION);
         this.runTimer();
         this.timerState.incrementTimesOnBreak();
         break;
@@ -229,7 +226,7 @@ class Timer {
 
   resetTimer() {
     this.stopTimer();
-    this.setTimeLeft(STUDY_DURATION);
+    this.setTimeLeft(this.app.STUDY_DURATION);
     this.setStatus(pomodoroStatus.STUDY_PAUSED);
   }
 
@@ -239,7 +236,9 @@ class Timer {
 class UiHandler {
   constructor() {
     this.handleClick = this.handleClick.bind(this);
-    this.selectElement(document.querySelector('[tab-button=timer]'));
+    // DEV:
+    this.selectElement(document.querySelector('[tab-button=prefs]'));
+    //this.selectElement(document.querySelector('[tab-button=timer]'));
     document.querySelectorAll('button[tab-button]')
       .forEach((btn) => {
         btn.addEventListener('click', this.handleClick);
@@ -278,10 +277,31 @@ class UiHandler {
   }
 
   hideAll() {
-    document.querySelectorAll('main div').forEach(pomoWindow => pomoWindow.classList.add('hidden'));
+    document.querySelectorAll('main > div').forEach(pomoWindow => pomoWindow.classList.add('hidden'));
   }
 }
 
-let ui = new UiHandler();
 
-let timer = new Timer();
+// testing study duration slider
+
+class App {
+  constructor() {
+    this.STUDY_DURATION = 25 * 60; // time in seconds
+    this.BREAK_DURATION = 5 * 60; // time in seconds
+    // this.STUDY_DURATION = 5; // time in seconds
+    // this.BREAK_DURATION = 3; // time in seconds
+
+    this.ui = new UiHandler();
+    this.timer = new Timer(this);
+
+  }
+}
+
+let slider = document.querySelector('#study-duration-setting .pref-input');
+console.log('sliders value: ', slider.value)
+let sliderValueLabel = document.querySelector('#study-duration-setting .pref-value');
+sliderValueLabel.textContent = slider.value;
+slider.oninput = () => { sliderValueLabel.textContent = slider.value; }
+
+
+let app = new App();
